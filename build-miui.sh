@@ -85,7 +85,7 @@ clang --version
 KSU_ZIP_STR=NoKernelSU
 if [ "$2" == "ksu" ]; then
     KSU_ENABLE=1
-    KSU_ZIP_STR=ReSukiSU-SuSFS
+    KSU_ZIP_STR=SukiSU-SUSFS
 else
     KSU_ENABLE=0
 fi
@@ -95,7 +95,7 @@ echo "TARGET_DEVICE: $TARGET_DEVICE"
 
 if [ $KSU_ENABLE -eq 1 ]; then
     echo "KSU is enabled"
-    curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
+    curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s builtin
 else
     echo "KSU is disabled"
 fi
@@ -110,8 +110,8 @@ echo "Cleaning..."
 rm -rf out/
 rm -rf anykernel/
 
-echo "Clone AnyKernel3 for packing kernel (repo: https://github.com/AstideLabs/AnyKernel3)"
-git clone https://github.com/AstideLabs/AnyKernel3 -b master --single-branch --depth=1 anykernel
+echo "Clone AnyKernel3 for packing kernel (repo: https://github.com/liyafe1997/AnyKernel3)"
+git clone https://github.com/liyafe1997/AnyKernel3 -b kona --single-branch --depth=1 anykernel
 
 # ------------- Building for MIUI -------------
 
@@ -182,7 +182,6 @@ make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
 if [ $KSU_ENABLE -eq 1 ]; then
     scripts/config --file out/.config \
     -e KSU \
-    -d THREAD_INFO_IN_TASK \
     -d KSU_SUSFS \
     -d KSU_SUSFS_SUS_PATH \
     -d KSU_SUSFS_SUS_MOUNT \
@@ -193,14 +192,12 @@ if [ $KSU_ENABLE -eq 1 ]; then
     -d KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG \
     -d KSU_SUSFS_OPEN_REDIRECT \
     -d KSU_SUSFS_SUS_MAP \
-    -d KSU_MULTI_MANAGER_SUPPORT \
-    -d KPM
+    -e THREAD_INFO_IN_TASK \
+    -e KPM
 else
     scripts/config --file out/.config -d KSU
 fi
 
-scripts/config --file out/.config \
-    -e BBG
 
 scripts/config --file out/.config \
     --set-str STATIC_USERMODEHELPER_PATH /system/bin/micd \
@@ -229,8 +226,6 @@ scripts/config --file out/.config \
     -e BOOTUP_RECLAIM \
     -e MI_RECLAIM \
     -e RTMM \
-    -d REKERNEL \
-    -d REKERNEL_NETWORK
 
 make $MAKE_ARGS -j$(nproc)
 
@@ -252,12 +247,12 @@ rm -rf ${dts_source}
 mv .dts.bak ${dts_source}
 
 rm -rf anykernel/kernels/
-mkdir -p anykernel/kernels/miui/
+mkdir -p anykernel/kernels/
 
 # Patch for SukiSU KPM support. 
 if [ $KSU_ENABLE -eq 1 ]; then
     cd out/arch/arm64/boot/
-    wget https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.13.0/patch_linux
+    wget https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.12.2/patch_linux
     chmod +x patch_linux
     ./patch_linux
     rm Image
@@ -265,9 +260,8 @@ if [ $KSU_ENABLE -eq 1 ]; then
     cd -
 fi
 
-cp out/arch/arm64/boot/Image anykernel/kernels/miui/
-cp out/arch/arm64/boot/dtb anykernel/kernels/miui/
-cp out/arch/arm64/boot/dtbo.img anykernel/kernels/miui/
+cp out/arch/arm64/boot/Image anykernel/kernels/
+cp out/arch/arm64/boot/dtb anykernel/kernels/
 
 echo "Build for MIUI finished."
 
@@ -277,7 +271,7 @@ echo "Build for MIUI finished."
 
 cd anykernel 
 
-ZIP_FILENAME=APTKernel_MIUI_${TARGET_DEVICE}_${KSU_ZIP_STR}_$(date +'%Y%m%d_%H%M%S')_anykernel3_${GIT_COMMIT_ID}.zip
+ZIP_FILENAME=Kernel_MIUI_${TARGET_DEVICE}_${KSU_ZIP_STR}_$(date +'%Y%m%d_%H%M%S')_anykernel3_${GIT_COMMIT_ID}.zip
 
 zip -r9 $ZIP_FILENAME ./* -x .git .gitignore out/ ./*.zip
 

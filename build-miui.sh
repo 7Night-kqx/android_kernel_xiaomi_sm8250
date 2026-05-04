@@ -182,7 +182,7 @@ make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
 if [ $KSU_ENABLE -eq 1 ]; then
     scripts/config --file out/.config \
     -e KSU \
-    -e THREAD_INFO_IN_TASK \
+    -d THREAD_INFO_IN_TASK \
     -d KSU_SUSFS \
     -d KSU_SUSFS_SUS_PATH \
     -d KSU_SUSFS_SUS_MOUNT \
@@ -193,8 +193,8 @@ if [ $KSU_ENABLE -eq 1 ]; then
     -d KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG \
     -d KSU_SUSFS_OPEN_REDIRECT \
     -d KSU_SUSFS_SUS_MAP \
-    -e KSU_MULTI_MANAGER_SUPPORT \
-    -e KPM
+    -d KSU_MULTI_MANAGER_SUPPORT \
+    -d KPM
 else
     scripts/config --file out/.config -d KSU
 fi
